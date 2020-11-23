@@ -26,7 +26,7 @@ function matches(teams) {
 NOTE(Richo): Cyclic algorithm taken from https://www.devenezia.com/downloads/round-robin/
 */
 function rounds(t) {
-  let ghost = "_";
+  let ghost = -1;
   let teams = t.slice();
   if (teams.length % 2 == 1) {
     teams.unshift(ghost);
