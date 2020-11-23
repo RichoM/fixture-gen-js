@@ -43,14 +43,6 @@ function isComplete(teams, rounds) {
   return true;
 }
 
-describe('Array', function() {
-  describe('#indexOf()', function() {
-    it('should return -1 when the value is not present', function() {
-      assert.equal([1, 2, 3].indexOf(4), -1);
-    });
-  });
-});
-
 describe("Fixture", function () {
   describe('create-teams', function () {
     it('create empty party', function() {
