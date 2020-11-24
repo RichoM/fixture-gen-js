@@ -22,7 +22,7 @@ rl.question('Cantidad de equipos? ', (answer) => {
 
   console.log(`Equipos: ${JSON.stringify(teams)}`);
   rounds.forEach((r, i) => {
-    console.log(`Ronda ${i+1}: ${(r.map(m => m.r + " vs " + m.g).join(", "))}`)
+    console.log(`Ronda ${i+1}: ${(r.map(m => m.home + " vs " + m.away).join(", "))}`)
   })
 
   rl.close();
