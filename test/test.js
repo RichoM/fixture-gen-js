@@ -137,10 +137,25 @@ describe('createTeams', function () {
 describe("Fixture", function () {
   describe("full check", function () {
     it("check all rounds from 2 to 25", function () {
+      let errors = new Map();
       for (let i = 2; i < 26; i++) {
         let teams = createTeams(i);
         let rounds = Fixture.create(teams);
-        verify(teams, rounds);
+        try {
+          verify(teams, rounds);
+        } catch (e) {
+          if (!errors.has(e.message)) {
+            errors.set(e.message, []);
+          }
+          errors.get(e.message).push(i);
+        }
+      }
+      if (errors.size > 0) {
+        let msg = "Errors found:\n";
+        errors.forEach((v, k) => {
+          msg += k + ": " + v.join(", ") + "\n";
+        });
+        assert.fail(msg);
       }
     });
   });
