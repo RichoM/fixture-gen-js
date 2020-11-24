@@ -20,28 +20,67 @@ function distinctTeams(matches) {
   return teams;
 }
 
-function isBalanced(matches) {
-  matches = matches.flat();
-  let teams = distinctTeams(matches);
-  let half = (teams.size - 1) / 2;
+function isBalanced(teams, rounds) {
+  let matches = rounds.flat();
+  let half = (teams.length - 1) / 2;
   let expected = new Set([Math.floor(half), Math.ceil(half)]);
-  return Array.from(teams).every(team => expected.has(matches.filter(m => m.r == team).length));
+  return teams.every(team => expected.has(matches.filter(m => m.r == team).length));
 }
 
 function isComplete(teams, rounds) {
-  let expected = f.matches(teams);
-  let actual = rounds.flat();
-  if (expected.length != actual.length) return false;
+  // The number of rounds is correct
+  let nrounds = teams.length % 2 == 0 ? teams.length - 1 : teams.length;
+  if (rounds.length != nrounds) return false;
 
-  let expected_set = new Set(expected.map(m => JSON.stringify(m)));
-  let actual_set = new Set(actual.map(m => JSON.stringify(m)));
-  if (actual.length != actual_set.size) return false; // No duplicates!
+  // Each round has the correct size
+  let round_size = Math.floor(teams.length / 2);
+  if (!rounds.every(round => round.length == round_size)) return false;
 
-  if (!expected.every(m => actual_set.has(JSON.stringify(m)))) return false;
-  if (!actual.every(m => expected_set.has(JSON.stringify(m)))) return false;
+  // Every team is matched with every other team
+  let matches = rounds.flat();
+  for (let i = 0; i < teams.length - 1; i++) {
+    let a = teams[i];
+    for (let j = i + 1; j < teams.length; j++) {
+      let b = teams[j];
+      if (!matches.some(m => (m.r == a && m.g == b)
+                          || (m.g == a && m.r == b))) {
+        return false;
+      }
+    }
+  }
 
   return true;
 }
+
+describe("isComplete", function() {
+  it("isComplete should detect missing match", function () {
+    let teams = ["A", "B", "C"];
+    let rounds = [[{r: "A", g: "B"}],
+                  [{r: "C", g: "B"}],
+                  [{r: "B", g: "A"}]];
+    assert.ok(!isComplete(teams, rounds));
+  });
+
+  it("isComplete should detect extra matches", function () {
+    let teams = ["A", "B", "C"];
+    let rounds = [[{r: "A", g: "B"},
+                   {r: "B", g: "A"}],
+                  [{r: "C", g: "B"},
+                   {r: "B", g: "C"}],
+                  [{r: "A", g: "C"},
+                   {r: "C", g: "A"}]];
+    assert.ok(!isComplete(teams, rounds));
+  });
+
+  it("isComplete should detect extra rounds", function () {
+    let teams = ["A", "B", "C"];
+    let rounds = [[{r: "A", g: "B"}],
+                  [{r: "B", g: "C"}],
+                  [{r: "C", g: "A"}],
+                  [{r: "B", g: "A"}]];
+    assert.ok(!isComplete(teams, rounds));
+  });
+})
 
 describe("Fixture", function () {
   describe('create-teams', function () {
@@ -58,13 +97,13 @@ describe("Fixture", function () {
       let teams = createTeams(3);
       let matches = f.matches(teams);
       assert.equal(JSON.stringify(["AB","CA","BC"]), JSON.stringify(matches.map(m => m.r+m.g)));
-      assert.ok(isBalanced(matches), "Matches are not balanced!");
+      assert.ok(isBalanced(teams, matches), "Matches are not balanced!");
     });
     it('create matches with 4 teams', function () {
       let teams = createTeams(4);
       let matches = f.matches(teams);
       assert.equal(JSON.stringify(["AB","CA","AD","BC","DB","CD"]), JSON.stringify(matches.map(m => m.r+m.g)));
-      assert.ok(isBalanced(matches), "Matches are not balanced!");
+      assert.ok(isBalanced(teams, matches), "Matches are not balanced!");
     });
   });
 
@@ -95,14 +134,14 @@ describe("Fixture", function () {
       let teams = createTeams(4);
       let rounds = f.rounds(teams);
       let actual = f.balance(teams, rounds);
-      assert.ok(isBalanced(actual), "Matches are not balanced!");
+      assert.ok(isBalanced(teams, actual), "Matches are not balanced!");
       assert.ok(isComplete(teams, actual), "Not all possible matches!");
     });
     it ("create balanced rounds with 5 teams", function () {
       let teams = createTeams(5);
       let rounds = f.rounds(teams);
       let actual = f.balance(teams, rounds);
-      assert.ok(isBalanced(actual), "Matches are not balanced!");
+      assert.ok(isBalanced(teams, actual), "Matches are not balanced!");
       assert.ok(isComplete(teams, actual), "Not all possible matches!");
     });
   });
@@ -113,7 +152,7 @@ describe("Fixture", function () {
         let teams = createTeams(i);
         let rounds = f.rounds(teams);
         let actual = f.balance(teams, rounds);
-        assert.ok(isBalanced(actual), "Matches are not balanced!");
+        assert.ok(isBalanced(teams, actual), "Matches are not balanced!");
         assert.ok(isComplete(teams, actual), "Not all possible matches!");
       }
     })
