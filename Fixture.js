@@ -53,7 +53,14 @@ var Fixture = (function () {
   }
 
   return {
-    create: teams => balance(teams, rounds(teams))
+    create: teams => {
+      let indices = teams.map((_, i) => i);
+      let balanced_rounds = balance(indices, rounds(indices));
+      return balanced_rounds.map(round => round.map(match => ({
+        home: teams[match.home],
+        away: teams[match.away]
+      })));
+    }
   };
 })();
 
