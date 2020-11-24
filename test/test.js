@@ -14,39 +14,44 @@ function distinctTeams(matches) {
   matches = matches.flat();
   let teams = new Set();
   matches.forEach(m => {
-    teams.add(m.r);
-    teams.add(m.g);
+    teams.add(m.home);
+    teams.add(m.away);
   });
   return teams;
 }
 
-function isBalanced(teams, rounds) {
-  let matches = rounds.flat();
-  let half = (teams.length - 1) / 2;
-  let expected = new Set([Math.floor(half), Math.ceil(half)]);
-  return teams.every(team => expected.has(matches.filter(m => m.r == team).length));
-}
-
-function isComplete(teams, rounds) {
+function verify(teams, rounds) {
   // The number of rounds is correct
   let nrounds = teams.length % 2 == 0 ? teams.length - 1 : teams.length;
-  if (rounds.length != nrounds) return false;
+  if (rounds.length != nrounds) {
+    throw new Error("Incorrect number of rounds!");
+  }
 
   // Each round has the correct size
   let round_size = Math.floor(teams.length / 2);
-  if (!rounds.every(round => round.length == round_size)) return false;
+  if (!rounds.every(round => round.length == round_size)) {
+    throw new Error("Incorrect round size!");
+  }
+
+  let matches = rounds.flat();
 
   // Every team is matched with every other team
-  let matches = rounds.flat();
   for (let i = 0; i < teams.length - 1; i++) {
     let a = teams[i];
     for (let j = i + 1; j < teams.length; j++) {
       let b = teams[j];
-      if (!matches.some(m => (m.r == a && m.g == b)
-                          || (m.g == a && m.r == b))) {
-        return false;
+      if (!matches.some(m => (m.home == a && m.away == b)
+                          || (m.away == a && m.home == b))) {
+        throw new Error("Not all possible matches!");
       }
     }
+  }
+
+  // Every team plays on either side the same number of times
+  let half = (teams.length - 1) / 2;
+  let expected = new Set([Math.floor(half), Math.ceil(half)]);
+  if (!teams.every(team => expected.has(matches.filter(m => m.home == team).length))) {
+    throw new Error("Matches are not balanced!");
   }
 
   return true;
@@ -55,30 +60,38 @@ function isComplete(teams, rounds) {
 describe("isComplete", function() {
   it("isComplete should detect missing match", function () {
     let teams = ["A", "B", "C"];
-    let rounds = [[{r: "A", g: "B"}],
-                  [{r: "C", g: "B"}],
-                  [{r: "B", g: "A"}]];
-    assert.ok(!isComplete(teams, rounds));
+    let rounds = [[{home: "A", away: "B"}],
+                  [{home: "C", away: "B"}],
+                  [{home: "B", away: "A"}]];
+    assert.throws(() => verify(teams, rounds), {message: "Not all possible matches!"});
   });
 
   it("isComplete should detect extra matches", function () {
     let teams = ["A", "B", "C"];
-    let rounds = [[{r: "A", g: "B"},
-                   {r: "B", g: "A"}],
-                  [{r: "C", g: "B"},
-                   {r: "B", g: "C"}],
-                  [{r: "A", g: "C"},
-                   {r: "C", g: "A"}]];
-    assert.ok(!isComplete(teams, rounds));
+    let rounds = [[{home: "A", away: "B"},
+                   {home: "B", away: "A"}],
+                  [{home: "C", away: "B"},
+                   {home: "B", away: "C"}],
+                  [{home: "A", away: "C"},
+                   {home: "C", away: "A"}]];
+    assert.throws(() => verify(teams, rounds), {message: "Incorrect round size!"});
   });
 
   it("isComplete should detect extra rounds", function () {
     let teams = ["A", "B", "C"];
-    let rounds = [[{r: "A", g: "B"}],
-                  [{r: "B", g: "C"}],
-                  [{r: "C", g: "A"}],
-                  [{r: "B", g: "A"}]];
-    assert.ok(!isComplete(teams, rounds));
+    let rounds = [[{home: "A", away: "B"}],
+                  [{home: "B", away: "C"}],
+                  [{home: "C", away: "A"}],
+                  [{home: "B", away: "A"}]];
+   assert.throws(() => verify(teams, rounds), {message: "Incorrect number of rounds!"});
+  });
+
+  it("isComplete should detect unbalanced fixture", function () {
+    let teams = ["A", "B", "C"];
+    let rounds = [[{home: "A", away: "B"}],
+                  [{home: "C", away: "B"}],
+                  [{home: "A", away: "C"}]];
+    assert.throws(() => verify(teams, rounds), {message: "Matches are not balanced!"});
   });
 })
 
@@ -96,10 +109,9 @@ describe("Fixture", function () {
     it("check all rounds from 2 to 25", function () {
       for (let i = 2; i < 26; i++) {
         let teams = createTeams(i);
-        let actual = Fixture.create(teams);
-        assert.ok(isBalanced(teams, actual), "Matches are not balanced!");
-        assert.ok(isComplete(teams, actual), "Not all possible matches!");
+        let rounds = Fixture.create(teams);
+        verify(teams, rounds);
       }
-    })
-  })
+    });
+  });
 });

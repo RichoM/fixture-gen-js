@@ -5,9 +5,9 @@ var Fixture = (function () {
     for (let i = 0; i < teams.length - 1; i++) {
       for (let j = i + 1; j < teams.length; j++) {
         if ((j - i) % 2 == 0) {
-          matches.push({r: teams[j], g: teams[i]});
+          matches.push({home: teams[j], away: teams[i]});
         } else {
-          matches.push({r: teams[i], g: teams[j]});
+          matches.push({home: teams[i], away: teams[j]});
         }
       }
     }
@@ -31,12 +31,12 @@ var Fixture = (function () {
       let round = [];
       rest.unshift(rest.pop()); // Cycle
       if (fixed != ghost) {
-        round.push({r: fixed, g: rest[0]});
+        round.push({home: fixed, away: rest[0]});
       }
       for (let j = 0; j < (rest.length - 1) / 2; j++) {
         let r = j + 1;
         let g = rest.length - (j + 1);
-        let match = {r: rest[r], g: rest[g]};
+        let match = {home: rest[r], away: rest[g]};
         round.push(match);
       }
       rounds.push(round);
@@ -48,17 +48,12 @@ var Fixture = (function () {
     let balancedMatches = new Set(matches(teams).map(m => JSON.stringify(m)));
     return rounds.map(round => round.map(match => {
       if (balancedMatches.has(JSON.stringify(match))) return match;
-      return {r: match.g, g: match.r};
+      return {home: match.away, away: match.home};
     }));
   }
 
   return {
-    create: teams => balance(teams, rounds(teams)),
-
-    /* TESTING */
-    matches: matches,
-    rounds: rounds,
-    balance: balance
+    create: teams => balance(teams, rounds(teams))
   };
 })();
 
