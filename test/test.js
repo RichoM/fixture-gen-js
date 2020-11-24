@@ -1,5 +1,5 @@
 var assert = require('assert');
-var f = require("../Fixture.js");
+var Fixture = require("../Fixture.js");
 
 function createTeams(n) {
   const letters = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
@@ -82,76 +82,21 @@ describe("isComplete", function() {
   });
 })
 
+describe('createTeams', function () {
+  it('create empty party', function() {
+    assert.equal(JSON.stringify([]), JSON.stringify(createTeams(0)));
+  });
+  it('create party with 3 teams', function() {
+    assert.equal(JSON.stringify(["A", "B", "C"]), JSON.stringify(createTeams(3)));
+  });
+});
+
 describe("Fixture", function () {
-  describe('create-teams', function () {
-    it('create empty party', function() {
-      assert.equal(JSON.stringify([]), JSON.stringify(createTeams(0)));
-    });
-    it('create party with 3 teams', function() {
-      assert.equal(JSON.stringify(["A", "B", "C"]), JSON.stringify(createTeams(3)));
-    });
-  });
-
-  describe("create-matches", function () {
-    it('create matches with 3 teams', function () {
-      let teams = createTeams(3);
-      let matches = f.matches(teams);
-      assert.equal(JSON.stringify(["AB","CA","BC"]), JSON.stringify(matches.map(m => m.r+m.g)));
-      assert.ok(isBalanced(teams, matches), "Matches are not balanced!");
-    });
-    it('create matches with 4 teams', function () {
-      let teams = createTeams(4);
-      let matches = f.matches(teams);
-      assert.equal(JSON.stringify(["AB","CA","AD","BC","DB","CD"]), JSON.stringify(matches.map(m => m.r+m.g)));
-      assert.ok(isBalanced(teams, matches), "Matches are not balanced!");
-    });
-  });
-
-  describe("rounds", function () {
-    it ("create rounds with 4 teams", function () {
-      let teams = createTeams(4);
-      let actual = f.rounds(teams);
-      let expected = [["AD", "BC"],
-                      ["AC", "DB"],
-                      ["AB", "CD"]];
-      assert.equal(JSON.stringify(expected), JSON.stringify(actual.map(matches => matches.map(m => m.r+m.g))));
-    });
-    it ("create rounds with 5 teams", function () {
-      let teams = createTeams(5);
-      let actual = f.rounds(teams);
-      let expected = [["AD", "BC"],
-                      ["EC", "AB"],
-                      ["DB", "EA"],
-                      ["CA", "DE"],
-                      ["BE", "CD"]];
-      assert.equal(JSON.stringify(expected), JSON.stringify(actual.map(matches => matches.map(m => m.r+m.g))));
-    });
-  });
-
-
-  describe("balanced rounds", function () {
-    it ("create balanced rounds with 4 teams", function () {
-      let teams = createTeams(4);
-      let rounds = f.rounds(teams);
-      let actual = f.balance(teams, rounds);
-      assert.ok(isBalanced(teams, actual), "Matches are not balanced!");
-      assert.ok(isComplete(teams, actual), "Not all possible matches!");
-    });
-    it ("create balanced rounds with 5 teams", function () {
-      let teams = createTeams(5);
-      let rounds = f.rounds(teams);
-      let actual = f.balance(teams, rounds);
-      assert.ok(isBalanced(teams, actual), "Matches are not balanced!");
-      assert.ok(isComplete(teams, actual), "Not all possible matches!");
-    });
-  });
-
   describe("full check", function () {
     it("check all rounds from 2 to 25", function () {
       for (let i = 2; i < 26; i++) {
         let teams = createTeams(i);
-        let rounds = f.rounds(teams);
-        let actual = f.balance(teams, rounds);
+        let actual = Fixture.create(teams);
         assert.ok(isBalanced(teams, actual), "Matches are not balanced!");
         assert.ok(isComplete(teams, actual), "Not all possible matches!");
       }
