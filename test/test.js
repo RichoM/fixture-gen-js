@@ -63,7 +63,8 @@ function verify(teams, rounds) {
       if (m.home == team) { count++; }
       if (m.away == team) { count--; }
 
-      if (count > 1 || count < -1) {
+      let max = 2;
+      if (Math.abs(count) > max) {
         throw new Error("Matches are not alternating!");
       }
     });
@@ -110,17 +111,22 @@ describe("isComplete", function() {
 
 
   it("isComplete should detect alternation failure", function () {
-    let teams = ["A", "B", "C", "D", "E"];
-    let rounds = [[{home: "A", away: "D"},
+    let teams = ["A", "B", "C", "D", "E", "F"];
+    let rounds = [[{home: "A", away: "F"},
+                   {home: "B", away: "E"},
+                   {home: "C", away: "D"}],
+                  [{home: "E", away: "A"},
+                   {home: "F", away: "D"},
                    {home: "B", away: "C"}],
-                  [{home: "E", away: "C"},
-                   {home: "A", away: "B"}],
-                  [{home: "D", away: "B"},
-                   {home: "E", away: "A"}],
+                  [{home: "A", away: "D"},
+                   {home: "E", away: "C"},
+                   {home: "F", away: "B"}],
                   [{home: "C", away: "A"},
-                   {home: "D", away: "E"}],
-                  [{home: "B", away: "E"},
-                   {home: "C", away: "D"}]];
+                   {home: "D", away: "B"},
+                   {home: "E", away: "F"}],
+                  [{home: "A", away: "B"},
+                   {home: "C", away: "F"},
+                   {home: "D", away: "E"}]];
     assert.throws(() => verify(teams, rounds), {message: "Matches are not alternating!"});
   });
 })
