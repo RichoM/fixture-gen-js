@@ -54,6 +54,20 @@ function verify(teams, rounds) {
     throw new Error("Matches are not balanced!");
   }
 
+  // Every team must alternate
+  for (let i = 0; i < teams.length; i++) {
+    let team = teams[i];
+    let count = 0;
+    let team_matches = matches.filter(m => m.home == team || m.away == team);
+    team_matches.forEach(m => {
+      if (m.home == team) { count++; }
+      if (m.away == team) { count--; }
+
+      if (count > 1 || count < -1) {
+        throw new Error("Matches are not alternating!");
+      }
+    });
+  }
   return true;
 }
 
@@ -92,6 +106,22 @@ describe("isComplete", function() {
                   [{home: "C", away: "B"}],
                   [{home: "A", away: "C"}]];
     assert.throws(() => verify(teams, rounds), {message: "Matches are not balanced!"});
+  });
+
+
+  it("isComplete should detect alternation failure", function () {
+    let teams = ["A", "B", "C", "D", "E"];
+    let rounds = [[{home: "A", away: "D"},
+                   {home: "B", away: "C"}],
+                  [{home: "E", away: "C"},
+                   {home: "A", away: "B"}],
+                  [{home: "D", away: "B"},
+                   {home: "E", away: "A"}],
+                  [{home: "C", away: "A"},
+                   {home: "D", away: "E"}],
+                  [{home: "B", away: "E"},
+                   {home: "C", away: "D"}]];
+    assert.throws(() => verify(teams, rounds), {message: "Matches are not alternating!"});
   });
 })
 
